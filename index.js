@@ -3,7 +3,7 @@ const request = require("request");
 const CronJob = require('cron').CronJob;
 const moment = require('moment');
 const util = require('util');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const FTPS = require('ftps');
 require('moment-timezone');
 moment.tz.setDefault("Asia/Seoul");
