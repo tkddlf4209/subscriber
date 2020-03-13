@@ -125,7 +125,7 @@ function requestMobius(bike_id) {
                 } else {
                     ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
                         if (err) console.log(err);
-                        fs.unlink(filePath)
+                        fs.unlink(filePath,function(err,rsp){})
                     });
                 }
             });
