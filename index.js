@@ -52,7 +52,7 @@ const pool = mysql.createPool({
 (function () {
     //requestMobius(10002);
     deviceIds.forEach(deviceId => {
-        requestMobius(10002);
+        requestMobius(deviceId);
     });
 })()
 
