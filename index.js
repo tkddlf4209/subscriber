@@ -5,6 +5,7 @@ const moment = require('moment');
 const util = require('util');
 const mysql = require('mysql2');
 const FTPS = require('ftps');
+const fs = require('fs');
 require('moment-timezone');
 moment.tz.setDefault("Asia/Seoul");
 
@@ -77,38 +78,36 @@ async function requestMobius(bike_id) {
         if (!!!obj) { // 데이터가 없을 경우 retrun
             return;
         }
+
+        var data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+            , now('YYYYMMDDHHmmss')
+            , bike_id
+            , util.format(format.BIKE_NAME, bike_id)
+            , 0
+            , 'sensor'
+            , obj.pi
+            , obj.ri
+            , obj.ty
+            , obj.ct
+            , obj.st
+            , obj.rn
+            , obj.lt
+            , obj.et
+            , obj.cs
+            , obj.cr
+            , obj.con);
+
+       
         if (true) {
             //if(isSameDay(obj.ct)){ // 현재날짜와 ct 날짜가 같으면 
             pool.getConnection(function (err, con) {
-
                 if (err) {
                     console.error(err);
                     return;
                 }
 
                 var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
-                var values = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
-                    , now('YYYYMMDDHHmmss')
-                    , bike_id
-                    , util.format(format.BIKE_NAME, bike_id)
-                    , 0
-                    , 'sensor'
-                    , obj.pi
-                    , obj.ri
-                    , obj.ty
-                    , obj.ct
-                    , obj.st
-                    , obj.rn
-                    , obj.lt
-                    , obj.et
-                    , obj.cs
-                    , obj.cr
-                    , obj.con);
-
-                console.log(table);
-                console.log(values);
-
-                var query = util.format(" INSERT INTO " + table + " values(" + values + ")")
+                var query = "INSERT INTO " + table + " values(" + data + ")"
 
                 // pool.query(query, function (err, rows) {
                 //     if (err) {
@@ -121,14 +120,22 @@ async function requestMobius(bike_id) {
 
                 // pool.releaseConnection(con);
 
-                var fileName = util.format(format.FILE_NAME, bike_id,bike_id,now('YYYYMMDDTHHmmss'));
-                console.log(fileName);
-                
-                ftps.put('./package.json', BIGDATA_DIR +"/"+fileName).exec(function (err, rep) {
-                    console.log(err);
-
-                });
             })
+            var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
+            var filePath = './tmp/'+fileName;
+
+            fs.writeFile(filePath, data, (err) => {
+                if (err){
+                    console.log(err);
+                }else{
+                   ftps.put(filePath, BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
+                        if(err) console.log(err);
+                        fs.unlink(filePath)
+                   });
+                }
+            }); 
+
+            
         }
     });
 
