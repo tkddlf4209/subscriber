@@ -9,13 +9,13 @@ require('moment-timezone');
 moment.tz.setDefault("Asia/Seoul");
 
 
-const BIGDATA_DIR='/home/kbell/kbell_package/bigdata_package/'
+const BIGDATA_DIR = '/home/kbell/kbell_package/bigdata_package/tmp/sensor_data_dir'
 var deviceIds = constants.deviceIds;
 var config = constants.config;
 var format = constants.format;
 
 var ftps = new FTPS({
-    host: '192.168.3.199', // required
+    host: '192.168.3.158', // required
     username: 'root', // Optional. Use empty username for anonymous access.
     password: 'kbroot', // Required if username is not empty, except when requiresPassword: false
     protocol: 'sftp', // Optional, values : 'ftp', 'sftp', 'ftps', ... default: 'ftp'
@@ -29,12 +29,12 @@ var ftps = new FTPS({
     //retryMultiplier: 1, // Optional, Multiplier by which retryInterval is multiplied each time new attempt fails. Defaults to 1
     //requiresPassword: true, // Optional, defaults to true
     //autoConfirm: true, // Optional, is used to auto confirm ssl questions on sftp or fish protocols, defaults to false
-    cwd:'/home/kbell/subscriber',
+    //cwd:'/home/kbell/subscriber',
     //cwd: BIGDATA_DIR+'/tmp/sensor_data_dir', // Optional, defaults to the directory from where the script is executed
 
     //additionalLftpCommands: '', // Additional commands to pass to lftp, splitted by ';'
-    //requireSSHKey:  true, //  Optional, defaults to false, This option for SFTP Protocol with ssh key authentication
-    //sshKeyPath: '/home1/phrasee/id_dsa' // Required if requireSSHKey: true , defaults to empty string, This option for SFTP Protocol with ssh key authentication
+    requireSSHKey: true, //  Optional, defaults to false, This option for SFTP Protocol with ssh key authentication
+    sshKeyPath: '~/.ssh/known_hosts' // Required if requireSSHKey: true , defaults to empty string, This option for SFTP Protocol with ssh key authentication
 });
 
 const pool = mysql.createPool({
@@ -50,13 +50,9 @@ const pool = mysql.createPool({
 
 
 (function () {
-    ftps.put('./package.json','package.json').exec(function(err,rep){
-        console.log(err);
-        
-    });
     //requestMobius(10002);
     // deviceIds.forEach(deviceId => {
-       
+
     // });
 })()
 
@@ -79,12 +75,12 @@ async function requestMobius(bike_id) {
         var obj = response.body['m2m:cin'];
 
         if (!!!obj) { // 데이터가 없을 경우 retrun
-           return;
+            return;
         }
-        if(true){
-        //if(isSameDay(obj.ct)){ // 현재날짜와 ct 날짜가 같으면 
+        if (true) {
+            //if(isSameDay(obj.ct)){ // 현재날짜와 ct 날짜가 같으면 
             pool.getConnection(function (err, con) {
-              
+
                 if (err) {
                     console.error(err);
                     return;
@@ -124,14 +120,22 @@ async function requestMobius(bike_id) {
                 // });
 
                 // pool.releaseConnection(con);
+
+                var fileName = util.format(format.FILE_NAME, bike_id,bike_id,now('YYYYMMDDTHHmmss'));
+                console.log(fileName);
+                
+                ftps.put('./package.json', BIGDATA_DIR +"/"+fileName).exec(function (err, rep) {
+                    console.log(err);
+
+                });
             })
         }
     });
 
 }
 
-function isSameDay(ct){
-    return  moment().isSame(moment(ct, 'YYYYMMDDTHHmmss').add(9,'hours'),'day');
+function isSameDay(ct) {
+    return moment().isSame(moment(ct, 'YYYYMMDDTHHmmss').add(9, 'hours'), 'day');
 }
 
 function now(format) {
