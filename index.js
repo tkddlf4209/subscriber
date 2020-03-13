@@ -10,7 +10,6 @@ require('moment-timezone');
 moment.tz.setDefault("Asia/Seoul");
 
 
-const BIGDATA_DIR = '/home/kbell/kbell_package/bigdata_package/tmp/sensor_data_dir'
 var deviceIds = constants.deviceIds;
 var config = constants.config;
 var format = constants.format;
@@ -97,7 +96,7 @@ async function requestMobius(bike_id) {
             , obj.cr
             , obj.con);
 
-       
+
         if (true) {
             //if(isSameDay(obj.ct)){ // 현재날짜와 ct 날짜가 같으면 
             pool.getConnection(function (err, con) {
@@ -122,20 +121,22 @@ async function requestMobius(bike_id) {
 
             })
             var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
-            var filePath = './tmp/'+fileName;
+            var filePath = './tmp/' + fileName;
 
             fs.writeFile(filePath, data, (err) => {
-                if (err){
+                if (err) {
                     console.log(err);
-                }else{
-                   ftps.put(filePath, BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
-                        if(err) console.log(err);
-                        fs.unlink(filePath)
-                   });
-                }
-            }); 
+                } else {
 
-            
+                    var BIGDATA_DIR = '/home/kbell/kbell_package/bigdata_package/tmp/sensor_data_dir'
+                    ftps.put(filePath, BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
+                        if (err) console.log(err);
+                        fs.unlink(filePath)
+                    });
+                }
+            });
+
+
         }
     });
 
