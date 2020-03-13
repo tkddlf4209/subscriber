@@ -51,13 +51,12 @@ const pool = mysql.createPool({
 
 (function () {
     //requestMobius(10002);
-    // deviceIds.forEach(deviceId => {
-
-    // });
+    deviceIds.forEach(deviceId => {
+        requestMobius(10002);
+    });
 })()
 
-async function requestMobius(bike_id) {
-
+function requestMobius(bike_id) {
 
     var options = {
         'method': 'GET',
@@ -81,24 +80,23 @@ async function requestMobius(bike_id) {
         var data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
             , now('YYYYMMDDHHmmss')
             , bike_id
-            , util.format(format.BIKE_NAME, bike_id)
+            , "'" + util.format(format.BIKE_NAME, bike_id) + "'"
             , 0
-            , 'sensor'
-            , obj.pi
-            , obj.ri
+            , "'sensor'"
+            , "'" + obj.pi + "'"
+            , "'" + obj.ri + "'"
             , obj.ty
-            , obj.ct
+            , "'" + obj.ct + "'"
             , obj.st
-            , obj.rn
-            , obj.lt
-            , obj.et
+            , "'" + obj.rn + "'"
+            , "'" + obj.lt + "'"
+            , "'" + obj.et + "'"
             , obj.cs
             , obj.cr
             , obj.con);
 
 
-        if (true) {
-            //if(isSameDay(obj.ct)){ // 현재날짜와 ct 날짜가 같으면 
+        if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
             pool.getConnection(function (err, con) {
                 if (err) {
                     console.error(err);
@@ -108,38 +106,31 @@ async function requestMobius(bike_id) {
                 var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
                 var query = "INSERT INTO " + table + " values(" + data + ")"
 
-                // pool.query(query, function (err, rows) {
-                //     if (err) {
-                //         console.error(err);
-                //         return;
-                //     }
+                pool.query(query, function (err, rows) {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+                });
 
-                //     //console.log(rows);
-                // });
-
-                // pool.releaseConnection(con);
+                pool.releaseConnection(con);
 
             })
             var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
-            var filePath = './tmp/' + fileName;
+            var filePath = './' + fileName;
 
             fs.writeFile(filePath, data, (err) => {
                 if (err) {
                     console.log(err);
                 } else {
-
-                    var BIGDATA_DIR = '/home/kbell/kbell_package/bigdata_package/tmp/sensor_data_dir'
-                    ftps.put(filePath, BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
+                    ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
                         if (err) console.log(err);
                         fs.unlink(filePath)
                     });
                 }
             });
-
-
         }
     });
-
 }
 
 function isSameDay(ct) {
