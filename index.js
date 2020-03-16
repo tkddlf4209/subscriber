@@ -73,13 +73,15 @@ function requestMobius(bike_id) {
                         if (err) {
                             console.error(err);
                             return;
+                        }else{
+                            console.log(query);
                         }
                     });
     
                     item.pool.releaseConnection(con);
     
                 })
-                
+
                 var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
                 var filePath = './' + fileName;
     
@@ -89,7 +91,11 @@ function requestMobius(bike_id) {
                             console.log(err);
                         } else {
                             item.ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
-                                if (err) console.log(err);
+                                if (err){
+                                    console.log(err);
+                                } else{
+                                    console.log(filePath);
+                                }
                                 fs.unlink(filePath,function(err,rsp){})
                             });
                         }
