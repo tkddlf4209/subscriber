@@ -57,7 +57,8 @@ function requestMobius(bike_id) {
             , obj.cr
             , obj.con);
 
-
+        console.log(bike_id,obj.ct,now('YYYYMMDDHHmmss'),isSameDay(obj.ct));
+        
         if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
             config.DEST.forEach(item=>{
                 item.pool.getConnection(function (err, con) {
