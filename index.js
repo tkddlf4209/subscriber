@@ -75,6 +75,28 @@ function requestMobius(bike_id) {
                             console.error(err);
                             return;
                         }else{
+                            var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
+                            var filePath = './' + fileName;
+                
+                            fs.writeFile(filePath, data, (err) => {
+                                try{
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        item.ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
+                                            if (err){
+                                                console.log(err);
+                                            } else{
+                                                console.log(filePath);
+                                            }
+                                            fs.unlink(filePath,function(err,rsp){})
+                                        });
+                                    }
+                                }catch(e){
+                                    console.log(e);
+                                    
+                                }
+                            });
                             console.log(query);
                         }
                     });
@@ -83,28 +105,7 @@ function requestMobius(bike_id) {
     
                 })
 
-                var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
-                var filePath = './' + fileName;
-    
-                fs.writeFile(filePath, data, (err) => {
-                    try{
-                        if (err) {
-                            console.log(err);
-                        } else {
-                            item.ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
-                                if (err){
-                                    console.log(err);
-                                } else{
-                                    console.log(filePath);
-                                }
-                                fs.unlink(filePath,function(err,rsp){})
-                            });
-                        }
-                    }catch(e){
-                        console.log(e);
-                        
-                    }
-                });
+               
             })
         }
     });
