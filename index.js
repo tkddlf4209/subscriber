@@ -12,13 +12,23 @@ var config = constants.config;
 var format = constants.format;
 
 (function () {
-    //requestMobius(10002);
-    deviceIds.forEach(deviceId => {
-        requestMobius(deviceId);
+    config.DEST.forEach(item => {
+        item.pool.getConnection(function (err, con) {
+            if(!err){
+                deviceIds.forEach(deviceId => {
+                    requestMobius(con,item.ftps,deviceId);
+                });
+            }
+         })
     });
+
+    setTimeout(function(){
+        process.exit(1);
+    },10000)
+
 })()
 
-function requestMobius(bike_id) {
+function requestMobius(con,ftps, bike_id) {
 
     var options = {
         'method': 'GET',
@@ -60,57 +70,41 @@ function requestMobius(bike_id) {
         console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
 
         if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
-            config.DEST.forEach(item => {
-                item.pool.getConnection(function (err, con) {
-                    if (err) {
-                        console.log("ERROR : ", err);
-                        con.release();
-                        return;
-                    }
+           
+            var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
+            var query = "INSERT INTO " + table + " values(" + data + ")"
 
-                    var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
-                    var query = "INSERT INTO " + table + " values(" + data + ")"
+            con.query(query, function (err, rows) {
+                if (err) {
+                    console.log("ERROR : ", err);
+                    return;
+                } else {
+                    var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
+                    var filePath = './' + fileName;
 
-                    item.pool.query(query, function (err, rows) {
-                        if (err) {
-                            console.log("ERROR : ", err);
-
-                            con.release();
-                            return;
-                        } else {
-                            var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
-                            var filePath = './' + fileName;
-
-                            fs.writeFile(filePath, data, (err) => {
-                                try {
+                    fs.writeFile(filePath, data, (err) => {
+                        try {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
                                     if (err) {
                                         console.log(err);
                                     } else {
-                                        item.ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
-                                            if (err) {
-                                                console.log(err);
-                                            } else {
-                                                console.log(filePath);
-                                            }
-                                            fs.unlink(filePath, function (err, rsp) { })
-                                        });
+                                        console.log(filePath);
                                     }
-                                } catch (e) {
-                                    console.log(e);
-
-                                }
-                            });
-                            console.log(query);
+                                    //console.log('test');
+                                    
+                                    fs.unlink(filePath, function (err, rsp) { })
+                                });
+                            }
+                        } catch (e) {
+                            console.log(e);
                         }
                     });
-
-
-                    con.release();
-
-                })
-
-
-            })
+                    //console.log(query);
+                }
+            });
         }
     });
 }
