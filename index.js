@@ -64,7 +64,7 @@ function requestMobius(bike_id) {
                 item.pool.getConnection(function (err, con) {
                     if (err) {
                         console.log("ERROR : ", err);
-                        item.pool.releaseConnection(con);
+                        con.release();
                         return;
                     }
 
@@ -74,7 +74,8 @@ function requestMobius(bike_id) {
                     item.pool.query(query, function (err, rows) {
                         if (err) {
                             console.log("ERROR : ", err);
-                            item.pool.releaseConnection(con);
+
+                            con.release();
                             return;
                         } else {
                             var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
@@ -103,7 +104,8 @@ function requestMobius(bike_id) {
                         }
                     });
 
-                    item.pool.releaseConnection(con);
+
+                    con.release();
 
                 })
 
