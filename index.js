@@ -57,55 +57,57 @@ function requestMobius(bike_id) {
             , obj.cr
             , obj.con);
 
-        console.log(bike_id,obj.ct,now('YYYYMMDDHHmmss'),isSameDay(obj.ct));
-        
+        console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
+
         if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
-            config.DEST.forEach(item=>{
+            config.DEST.forEach(item => {
                 item.pool.getConnection(function (err, con) {
                     if (err) {
-                        console.error(err);
+                        console.log("ERROR : ", err);
+                        item.pool.releaseConnection(con);
                         return;
                     }
-    
+
                     var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
                     var query = "INSERT INTO " + table + " values(" + data + ")"
-    
+
                     item.pool.query(query, function (err, rows) {
                         if (err) {
-                            console.error(err);
+                            console.log("ERROR : ", err);
+                            item.pool.releaseConnection(con);
                             return;
-                        }else{
+                        } else {
                             var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
                             var filePath = './' + fileName;
-                
+
                             fs.writeFile(filePath, data, (err) => {
-                                try{
+                                try {
                                     if (err) {
                                         console.log(err);
                                     } else {
                                         item.ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
-                                            if (err){
+                                            if (err) {
                                                 console.log(err);
-                                            } else{
+                                            } else {
                                                 console.log(filePath);
                                             }
-                                            fs.unlink(filePath,function(err,rsp){})
+                                            fs.unlink(filePath, function (err, rsp) { })
                                         });
                                     }
-                                }catch(e){
+                                } catch (e) {
                                     console.log(e);
-                                    
+
                                 }
                             });
                             console.log(query);
                         }
                     });
-    
+
                     item.pool.releaseConnection(con);
-    
+
                 })
 
-               
+
             })
         }
     });
