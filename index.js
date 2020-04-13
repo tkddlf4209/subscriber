@@ -14,21 +14,21 @@ var format = constants.format;
 (function () {
     config.DEST.forEach(item => {
         item.pool.getConnection(function (err, con) {
-            if(!err){
+            if (!err) {
                 deviceIds.forEach(deviceId => {
-                    requestMobius(con,item.ftps,deviceId);
+                    requestMobius(con, item.ftps, deviceId);
                 });
             }
-         })
+        })
     });
 
-    setTimeout(function(){
+    setTimeout(function () {
         process.exit(1);
-    },10000)
+    }, 10000)
 
 })()
 
-function requestMobius(con,ftps, bike_id) {
+function requestMobius(con, ftps, bike_id) {
 
     var options = {
         'method': 'GET',
@@ -49,7 +49,7 @@ function requestMobius(con,ftps, bike_id) {
             return;
         }
 
-        var data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+        var mysql_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
             , now('YYYYMMDDHHmmss')
             , bike_id
             , "'" + util.format(format.BIKE_NAME, bike_id) + "'"
@@ -67,12 +67,32 @@ function requestMobius(con,ftps, bike_id) {
             , obj.cr
             , obj.con);
 
+        var csv_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+            , now('YYYYMMDDHHmmss')
+            , bike_id
+            , util.format(format.BIKE_NAME, bike_id)
+            , 0
+            , "sensor"
+            , obj.pi
+            , obj.ri
+            , obj.ty
+            , obj.ct
+            , obj.st
+            , obj.rn
+            , obj.lt
+            , obj.et
+            , obj.cs
+            , obj.cr
+            , obj.con);
+        console.log(csv_data);
+
+
         console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
 
         if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
-           
+
             var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
-            var query = "INSERT INTO " + table + " values(" + data + ")"
+            var query = "INSERT INTO " + table + " values(" + mysql_data + ")"
 
             con.query(query, function (err, rows) {
                 if (err) {
@@ -82,7 +102,7 @@ function requestMobius(con,ftps, bike_id) {
                     var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
                     var filePath = './' + fileName;
 
-                    fs.writeFile(filePath, data, (err) => {
+                    fs.writeFile(filePath, csv_data, (err) => {
                         try {
                             if (err) {
                                 console.log(err);
@@ -94,7 +114,7 @@ function requestMobius(con,ftps, bike_id) {
                                         console.log(filePath);
                                     }
                                     //console.log('test');
-                                    
+
                                     fs.unlink(filePath, function (err, rsp) { })
                                 });
                             }
