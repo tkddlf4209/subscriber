@@ -39,14 +39,15 @@ function requestMobius(con, ftps, bike_id) {
         },
         'json': true
     }
-
+console.log(bike_id,'@@@@');
     request(options, function (error, response) {
         if (error) throw new Error(error);
 
         var obj = response.body['m2m:cin'];
 
         if (!!!obj) { // 데이터가 없을 경우 retrun
-            return;
+           console.log(bike_id,'null'); 
+	   return;
         }
 
         var mysql_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
@@ -84,10 +85,10 @@ function requestMobius(con, ftps, bike_id) {
             , obj.cs
             , obj.cr
             , obj.con);
-        console.log(csv_data);
+        //console.log(csv_data);
 
 
-        console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
+        //console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
 
         if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
 
@@ -96,7 +97,7 @@ function requestMobius(con, ftps, bike_id) {
 
             con.query(query, function (err, rows) {
                 if (err) {
-                    console.log("ERROR : ", err);
+                    console.log("mysql error : ", err);
                     return;
                 } else {
                     var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
@@ -105,11 +106,11 @@ function requestMobius(con, ftps, bike_id) {
                     fs.writeFile(filePath, csv_data, (err) => {
                         try {
                             if (err) {
-                                console.log(err);
+                                console.log('file write error : ', err);
                             } else {
                                 ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
                                     if (err) {
-                                        console.log(err);
+                                        console.log('ftps err : ',err);
                                     } else {
                                         console.log(filePath);
                                     }
@@ -125,7 +126,9 @@ function requestMobius(con, ftps, bike_id) {
                     //console.log(query);
                 }
             });
-        }
+        }else{
+	    console.log(bike_id,'is not same day' , now('YYYYMMDDHHmmss'),obj.ct)
+	}
     });
 }
 
