@@ -24,7 +24,7 @@ var format = constants.format;
 
     setTimeout(function () {
         process.exit(1);
-    }, 10000)
+    }, 20000)
 
 })()
 
