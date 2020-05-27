@@ -20,12 +20,13 @@ var format = constants.format;
                     await requestMobius(con,item.ftps,deviceIds[i]);
                  }
             }
+            con.release()
         })
     });
 
     setTimeout(function () {
         process.exit(1);
-    }, 20000)
+    }, 10000)
 
 })()
 
@@ -51,7 +52,7 @@ async function requestMobius(con, ftps, bike_id) {
 
         var response = await rp(options);
         
-        var obj = response.body['m2m:cin'];
+        var obj = response['m2m:cin'];
         if (!!!obj) { // 데이터가 없을 경우 retrun
             console.log(bike_id, 'null');
             return;
@@ -100,7 +101,7 @@ async function requestMobius(con, ftps, bike_id) {
         if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
             var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
             var query = "INSERT INTO " + table + " values(" + mysql_data + ")"
-            let rows = await con.query(query);
+            let rows = await con.promise().query(query);
             try{
                 var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
                     var filePath = './' + fileName;
