@@ -134,7 +134,7 @@ async function requestMobius(con, ftps, bike_id) {
             console.log(bike_id, 'is not same day', now('YYYYMMDDHHmmss'), obj.ct)
         }
     }catch(e){
-        console.log(e);
+        //console.log(e);
     }
 
 }
