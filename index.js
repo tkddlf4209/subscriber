@@ -47,93 +47,95 @@ async function requestMobius(con, ftps, bike_id) {
         'json': true
     }
     //console.log(bike_id, '@@@@');
-    var resposne = await rp(options);
+    try{
 
-    var obj = response.body['m2m:cin'];
-    if (!!!obj) { // 데이터가 없을 경우 retrun
-        console.log(bike_id, 'null');
-        return;
-    }
-
-    var mysql_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
-        , now('YYYYMMDDHHmmss')
-        , bike_id
-        , "'" + util.format(format.BIKE_NAME, bike_id) + "'"
-        , 0
-        , "'sensor'"
-        , "'" + obj.pi + "'"
-        , "'" + obj.ri + "'"
-        , obj.ty
-        , "'" + obj.ct + "'"
-        , obj.st
-        , "'" + obj.rn + "'"
-        , "'" + obj.lt + "'"
-        , "'" + obj.et + "'"
-        , obj.cs
-        , obj.cr
-        , obj.con);
-
-    var csv_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
-        , now('YYYYMMDDHHmmss')
-        , bike_id
-        , util.format(format.BIKE_NAME, bike_id)
-        , 0
-        , "sensor"
-        , obj.pi
-        , obj.ri
-        , obj.ty
-        , obj.ct
-        , obj.st
-        , obj.rn
-        , obj.lt
-        , obj.et
-        , obj.cs
-        , obj.cr
-        , obj.con);
-    //console.log(csv_data);
-
-
-    //console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
-
-    if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
-        var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
-        var query = "INSERT INTO " + table + " values(" + mysql_data + ")"
-        let rows = await con.query(query);
-        try{
-            var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
-                var filePath = './' + fileName;
-
-                fs.writeFile(filePath, csv_data, (err) => {
-                    try {
-                        if (err) {
-                            console.log('file write error : ', err);
-                        } else {
-                            ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
-                                if (err) {
-                                    console.log('ftps err : ', err);
-                                } else {
-                                    console.log(filePath);
-                                }
-                                //console.log('test');
-
-                                fs.unlink(filePath, function (err, rsp) { })
-                            });
-                        }
-                    } catch (e) {
-                        console.log(e);
-                    }
-                });
-        }catch(e){
-            console.log("mysql error : ", err);
-        }
+        var response = await rp(options);
         
-    } else {
-        console.log(bike_id, 'is not same day', now('YYYYMMDDHHmmss'), obj.ct)
+        var obj = response.body['m2m:cin'];
+        if (!!!obj) { // 데이터가 없을 경우 retrun
+            console.log(bike_id, 'null');
+            return;
+        }
+    
+        var mysql_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+            , now('YYYYMMDDHHmmss')
+            , bike_id
+            , "'" + util.format(format.BIKE_NAME, bike_id) + "'"
+            , 0
+            , "'sensor'"
+            , "'" + obj.pi + "'"
+            , "'" + obj.ri + "'"
+            , obj.ty
+            , "'" + obj.ct + "'"
+            , obj.st
+            , "'" + obj.rn + "'"
+            , "'" + obj.lt + "'"
+            , "'" + obj.et + "'"
+            , obj.cs
+            , obj.cr
+            , obj.con);
+    
+        var csv_data = util.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+            , now('YYYYMMDDHHmmss')
+            , bike_id
+            , util.format(format.BIKE_NAME, bike_id)
+            , 0
+            , "sensor"
+            , obj.pi
+            , obj.ri
+            , obj.ty
+            , obj.ct
+            , obj.st
+            , obj.rn
+            , obj.lt
+            , obj.et
+            , obj.cs
+            , obj.cr
+            , obj.con);
+        //console.log(csv_data);
+    
+    
+        //console.log(bike_id, obj.ct, now('YYYYMMDDHHmmss'), isSameDay(obj.ct));
+    
+        if (isSameDay(obj.ct)) { // 현재날짜와 ct 날짜가 같으면 
+            var table = util.format(format.MYSQL_TABLE, now('YYYYMMDD'));
+            var query = "INSERT INTO " + table + " values(" + mysql_data + ")"
+            let rows = await con.query(query);
+            try{
+                var fileName = util.format(format.FILE_NAME, bike_id, bike_id, now('YYYYMMDDHHmmss'));
+                    var filePath = './' + fileName;
+    
+                    fs.writeFile(filePath, csv_data, (err) => {
+                        try {
+                            if (err) {
+                                console.log('file write error : ', err);
+                            } else {
+                                ftps.put(filePath, config.BIGDATA_DIR + "/" + fileName).exec(function (err, rep) {
+                                    if (err) {
+                                        console.log('ftps err : ', err);
+                                    } else {
+                                        console.log(filePath);
+                                    }
+                                    //console.log('test');
+    
+                                    fs.unlink(filePath, function (err, rsp) { })
+                                });
+                            }
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    });
+            }catch(e){
+                console.log("mysql error : ", err);
+            }
+            
+        } else {
+            console.log(bike_id, 'is not same day', now('YYYYMMDDHHmmss'), obj.ct)
+        }
+    }catch(e){
+        console.log(e);
     }
-    // request(options, function (error, response) {
-    //     if (error) throw new Error(error);
 
-    // });
 }
 
 function isSameDay(ct) {
